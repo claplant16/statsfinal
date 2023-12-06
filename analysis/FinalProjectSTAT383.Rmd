@@ -174,14 +174,11 @@ USRetailers22$RetailerSalePercentage[10] <- ((as.numeric(USRetailers22$Sales[10]
 USRetailers22$RetailerSalePercentage[1:10]
 ```
 
-We will plot, on a bar graph, total retail sales versus the retailers' sales for 2022.
-
-The first bar graph is just the top ten retailers Sales. The second is the overlay for 2022's retail sales to compare visually.
+We will plot, on a bar graph, the retailers' sales for 2022.
 
 ```{r}
 ggplot(USRetailers22[1:10,], aes(x = Retailer, y = Sales)) +
-  geom_bar(stat = "identity")
-ggplot(retailSales12to22[11], aes(y = Sales))
+  geom_bar(stat = "identity", aes(weight = RetailerSalePercentage), color = "black", fill = "lightblue")
 ```
 
 
