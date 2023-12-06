@@ -1,0 +1,191 @@
+---
+title: "Final Project"
+author: "Group Project"
+date: "2023-12-08"
+output: html_notebook
+---
+
+Loading in our packages.
+
+```{r}
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+library(readxl)
+```
+
+First, we will load in all of our data and cut the data frames to hold only the necessary information, and also rename column names for clarity.
+
+```{r}
+rawHolidaySales00to23 = read_excel("statistic_id243439_holiday-retail-sales-in-the-united-states-2000-2023.xlsx", 2)
+holidaySales00to23 <- rawHolidaySales00to23[-c(1:2),]
+colnames(holidaySales00to23)[1] = "Year"
+colnames(holidaySales00to23)[2] = "Sales"
+
+rawUSRetailers22 = read_excel("statistic_id195992_united-states_-top-100-retailers-2022-by-us-retail-sales.xlsx", 2)
+USRetailers22 = rawUSRetailers22[-c(1:2),]
+colnames(USRetailers22)[1] = "Retailer"
+colnames(USRetailers22)[2] = "Sales"
+
+rawRetailSales92to22 = read_excel("statistic_id197576_united-states_-total-retail-sales-in-the-united-states-1992-2022.xlsx", 2)
+retailSales92to22 <- rawRetailSales92to22[-c(1:2),]
+colnames(retailSales92to22)[1] = "Year"
+colnames(retailSales92to22)[2] = "Sales"
+
+rawProjectedOnlineSales23 = read_excel("statistic_id283409_forecast-cyber-five-online-retail-sales-in-the-us2023.xlsx", 2)
+projectedOnlineSales23 <- rawProjectedOnlineSales23[-c(1:2),]
+colnames(projectedOnlineSales23)[1] = "Day"
+colnames(projectedOnlineSales23)[2] = "Sales"
+
+rawOnlineSales20to23 = read_excel("statistic_id861193_e-commerce-holiday-season-revenue-in-the-us-2019-2023-by-shopping-day.xlsx", 2)
+onlineSales20to23 <- rawOnlineSales20to23[-c(1:2),]
+colnames(onlineSales20to23)[1] = "Day"
+colnames(onlineSales20to23)[2] = "2020 Sales"
+colnames(onlineSales20to23)[3] = "2021 Sales"
+colnames(onlineSales20to23)[4] = "2022 Sales"
+colnames(onlineSales20to23)[5] = "2023 Projected Sales"
+```
+
+# 1. How much do retail sales increase because of the holidays?
+
+First, we will look at how retail sales and holiday sales look in general, and how they compare to each other.
+
+```{r}
+# Retail Sale Scatter Plot
+retailSales92to22 = as.data.frame(retailSales92to22)
+ggplot(retailSales92to22) +
+  aes(x = Year, y = Sales) +
+  geom_point()
+
+# Holiday Sale Scatter Plot
+holidaySales00to23 = as.data.frame(holidaySales00to23)
+ggplot(holidaySales00to23) +
+  aes(x = Year, y = Sales) +
+  geom_point()
+
+# Comparison
+ggplot() +
+  geom_point(data = retailSales92to22, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = holidaySales00to23, aes(x = Year, y = Sales, color = "coral"))
+```
+
+In order to get an effective result, we will cut both data frames so that the data is focusing only on the years 2012-2022.
+
+```{r}
+retailSales12to22 <- retailSales92to22[-c(1:20),]
+holidaySales12to22 <- holidaySales00to23[-c(1:12, 24),]
+```
+
+Now, we will repeat the same process for the new data frames.
+
+```{r}
+# Retail Sale Scatter Plot
+ggplot(retailSales12to22) +
+  aes(x = Year, y = Sales) +
+  geom_point()
+
+# Holiday Sale Scatter Plot
+ggplot(holidaySales12to22) +
+  aes(x = Year, y = Sales) +
+  geom_point()
+
+# Comparison
+ggplot() +
+  geom_point(data = retailSales12to22, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = holidaySales12to22, aes(x = Year, y = Sales, color = "coral"))
+```
+
+```{r}
+lmRetailSales12to22 <- lm(Year ~ Sales, data = retailSales12to22)
+summary(lmRetailSales12to22)
+
+lmHolidaySales12to22 <- lm(Year ~ Sales, data = holidaySales12to22)
+summary(lmHolidaySales12to22)
+```
+
+We will subtract the holiday sales from the retail sales to see how much retail sales are without taking holiday sales into account.
+
+```{r}
+retailSales12to22$SalesWithoutHoliday <- (retailSales12to22$Sales - holidaySales12to22$Sales)
+
+ggplot() +
+  geom_point(data = retailSales12to22, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = retailSales12to22, aes(x = Year, y = SalesWithoutHoliday, color = "coral"))
+```
+
+As we can see from the data, the retail sales are affected pretty heavily from holiday sales.
+
+# 2. Do specific deal days, like Black Friday, actually influence sales greatly, as it is made out to be, in person and online?
+
+We will take the holiday sales and online sales data to better answer this question. We already know that deal days influence the sales greatly, we will see if online sales hold a majority of that influence. We will only take into account years 2020-2022, as that is the only data we have.
+
+```{r}
+onlineSales20to23$TotalSales2020 <- (sum(as.numeric(onlineSales20to23$`2020 Sales`)))
+onlineSales20to23$TotalSales2021 <- (sum(as.numeric(onlineSales20to23$`2021 Sales`)))
+onlineSales20to23$TotalSales2022 <- (sum(as.numeric(onlineSales20to23$`2022 Sales`)))
+
+onlineSales20to23$TotalSales2020[1]
+onlineSales20to23$TotalSales2021[1]
+onlineSales20to23$TotalSales2022[1]
+```
+
+Now we will subtract the online sales from the total holiday sales.
+
+```{r}
+holidaySales12to22$InPersonSales <- (NA)
+holidaySales12to22$InPersonSales[9] <- (holidaySales12to22$Sales[9] - onlineSales20to23$TotalSales2020[1])
+holidaySales12to22$InPersonSales[9]
+
+holidaySales12to22$InPersonSales[10] <- (holidaySales12to22$Sales[10] - onlineSales20to23$TotalSales2020[1])
+holidaySales12to22$InPersonSales[10]
+
+holidaySales12to22$InPersonSales[11] <- (holidaySales12to22$Sales[11] - onlineSales20to23$TotalSales2020[1])
+holidaySales12to22$InPersonSales[11]
+```
+
+We will graph the differences to see how big of a difference it is between online and in-person holiday sales.
+
+```{r}
+ggplot() +
+  geom_point(data = holidaySales12to22, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = holidaySales12to22, aes(x = Year, y = InPersonSales, color = "coral"))#change legends
+```
+
+We can see, that it is not much a difference in sales. If people did not shop online at all, the loss would not be very significant.
+
+# 3. Do top retailers skew these results, as they are popular year round?
+
+We will take the top ten retailers of 2022 and figure out what percentage of their sales make up total retail sales for that year.
+
+```{r}
+USRetailers22$RetailerSalePercentage <- (NA)
+USRetailers22$RetailerSalePercentage[1] <- ((as.numeric(USRetailers22$Sales[1]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[2] <- ((as.numeric(USRetailers22$Sales[2]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[3] <- ((as.numeric(USRetailers22$Sales[3]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[4] <- ((as.numeric(USRetailers22$Sales[4]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[5] <- ((as.numeric(USRetailers22$Sales[5]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[6] <- ((as.numeric(USRetailers22$Sales[6]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[7] <- ((as.numeric(USRetailers22$Sales[7]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[8] <- ((as.numeric(USRetailers22$Sales[8]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[9] <- ((as.numeric(USRetailers22$Sales[9]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+USRetailers22$RetailerSalePercentage[10] <- ((as.numeric(USRetailers22$Sales[10]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+
+USRetailers22$RetailerSalePercentage[1:10]
+```
+
+We will plot, on a bar graph, the retailers' sales for 2022.
+
+```{r}
+ggplot(USRetailers22[1:10,], aes(x = Retailer, y = Sales)) +
+  geom_bar(stat = "identity",)
+```
+
+
+
+
+
+
+
+
+
