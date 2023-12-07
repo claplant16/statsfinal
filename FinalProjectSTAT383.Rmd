@@ -22,21 +22,16 @@ rawHolidaySales00to23 = read_excel("statistic_id243439_holiday-retail-sales-in-t
 holidaySales00to23 <- rawHolidaySales00to23[-c(1:2),]
 colnames(holidaySales00to23)[1] = "Year"
 colnames(holidaySales00to23)[2] = "Sales"
-
-rawUSRetailers22 = read_excel("statistic_id195992_united-states_-top-100-retailers-2022-by-us-retail-sales.xlsx", 2)
-USRetailers22 = rawUSRetailers22[-c(1:2),]
-colnames(USRetailers22)[1] = "Retailer"
-colnames(USRetailers22)[2] = "Sales"
+holidaySales00to23$Year <- as.numeric(holidaySales00to23$Year)
+holidaySales00to23$Sales <- as.numeric(holidaySales00to23$Sales)
+holidaySales00to23$Year[24] <- (2023)
 
 rawRetailSales92to22 = read_excel("statistic_id197576_united-states_-total-retail-sales-in-the-united-states-1992-2022.xlsx", 2)
 retailSales92to22 <- rawRetailSales92to22[-c(1:2),]
 colnames(retailSales92to22)[1] = "Year"
 colnames(retailSales92to22)[2] = "Sales"
-
-rawProjectedOnlineSales23 = read_excel("statistic_id283409_forecast-cyber-five-online-retail-sales-in-the-us2023.xlsx", 2)
-projectedOnlineSales23 <- rawProjectedOnlineSales23[-c(1:2),]
-colnames(projectedOnlineSales23)[1] = "Day"
-colnames(projectedOnlineSales23)[2] = "Sales"
+retailSales92to22$Year <- as.numeric(retailSales92to22$Year)
+retailSales92to22$Sales <- as.numeric(retailSales92to22$Sales)
 
 rawOnlineSales20to23 = read_excel("statistic_id861193_e-commerce-holiday-season-revenue-in-the-us-2019-2023-by-shopping-day.xlsx", 2)
 onlineSales20to23 <- rawOnlineSales20to23[-c(1:2),]
@@ -45,9 +40,20 @@ colnames(onlineSales20to23)[2] = "2020 Sales"
 colnames(onlineSales20to23)[3] = "2021 Sales"
 colnames(onlineSales20to23)[4] = "2022 Sales"
 colnames(onlineSales20to23)[5] = "2023 Projected Sales"
+onlineSales20to23$`2020 Sales` <- as.numeric(onlineSales20to23$`2020 Sales`)
+onlineSales20to23$`2021 Sales` <- as.numeric(onlineSales20to23$`2021 Sales`)
+onlineSales20to23$`2022 Sales` <- as.numeric(onlineSales20to23$`2022 Sales`)
+onlineSales20to23$`2023 Projected Sales`<- as.numeric(onlineSales20to23$`2023 Projected Sales`)
+
+rawInflationRates60to22 = read_excel("FPCPITOTLZGUSA.xls")
+inflationRates60to22 <- rawInflationRates60to22[-c(1:10),]
+colnames(inflationRates60to22)[1] = "Year"
+colnames(inflationRates60to22)[2] = "Inflation Rate"
+inflationRates60to22$Year <- as.numeric(seq.int(from = 1960, to = 2022))
+inflationRates60to22$`Inflation Rate` <- as.numeric(inflationRates60to22$`Inflation Rate`)
 ```
 
-# 1. How much do retail sales increase because of the holidays?
+# 1. Do holiday sales actaully increase retail sales by a large margin?
 
 First, we will look at how retail sales and holiday sales look in general, and how they compare to each other.
 
@@ -56,13 +62,15 @@ First, we will look at how retail sales and holiday sales look in general, and h
 retailSales92to22 = as.data.frame(retailSales92to22)
 ggplot(retailSales92to22) +
   aes(x = Year, y = Sales) +
-  geom_point()
+  geom_point() +
+  geom_smooth(method = "lm")
 
 # Holiday Sale Scatter Plot
 holidaySales00to23 = as.data.frame(holidaySales00to23)
 ggplot(holidaySales00to23) +
   aes(x = Year, y = Sales) +
-  geom_point()
+  geom_point() +
+  geom_smooth(method = "lm")
 
 # Comparison
 ggplot() +
@@ -70,122 +78,182 @@ ggplot() +
   geom_point(data = holidaySales00to23, aes(x = Year, y = Sales, color = "coral"))
 ```
 
-In order to get an effective result, we will cut both data frames so that the data is focusing only on the years 2012-2022.
+In order to get an effective result, we will cut both data frames so that the data is focusing only on the years 2010-2020. Anything before 2010 is a little too old. In regards to the years 2021 and 2022, reasons for exclusion are discussed in our paper.
 
 ```{r}
-retailSales12to22 <- retailSales92to22[-c(1:20),]
-holidaySales12to22 <- holidaySales00to23[-c(1:12, 24),]
+retailSales10to20 <- retailSales92to22[-c(1:18,30:31),]
+holidaySales10to20 <- holidaySales00to23[-c(1:10, 22:24),]
 ```
 
 Now, we will repeat the same process for the new data frames.
 
 ```{r}
 # Retail Sale Scatter Plot
-ggplot(retailSales12to22) +
+ggplot(retailSales10to20) +
   aes(x = Year, y = Sales) +
-  geom_point()
+  geom_point() +
+  geom_smooth(method = "lm")
 
 # Holiday Sale Scatter Plot
-ggplot(holidaySales12to22) +
+ggplot(holidaySales10to20) +
   aes(x = Year, y = Sales) +
-  geom_point()
+  geom_point() +
+  geom_smooth(method = "lm")
 
 # Comparison
 ggplot() +
-  geom_point(data = retailSales12to22, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = holidaySales12to22, aes(x = Year, y = Sales, color = "coral"))
+  geom_point(data = retailSales10to20, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = holidaySales10to20, aes(x = Year, y = Sales, color = "coral"))
 ```
 
 ```{r}
-lmRetailSales12to22 <- lm(Year ~ Sales, data = retailSales12to22)
-summary(lmRetailSales12to22)
+lmRetailSales10to20 <- lm(Sales ~ Year, data = retailSales10to20)
+summary(lmRetailSales10to20)
 
-lmHolidaySales12to22 <- lm(Year ~ Sales, data = holidaySales12to22)
-summary(lmHolidaySales12to22)
+lmHolidaySales10to20 <- lm(Sales ~ Year, data = holidaySales10to20)
+summary(lmHolidaySales10to20)
 ```
 
 We will subtract the holiday sales from the retail sales to see how much retail sales are without taking holiday sales into account.
 
 ```{r}
-retailSales12to22$SalesWithoutHoliday <- (retailSales12to22$Sales - holidaySales12to22$Sales)
+retailSales10to20$SalesWithoutHoliday <- (retailSales10to20$Sales - holidaySales10to20$Sales)
 
 ggplot() +
-  geom_point(data = retailSales12to22, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = retailSales12to22, aes(x = Year, y = SalesWithoutHoliday, color = "coral"))
+  geom_point(data = retailSales10to20, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = retailSales10to20, aes(x = Year, y = SalesWithoutHoliday, color = "coral"))
 ```
 
 As we can see from the data, the retail sales are affected pretty heavily from holiday sales.
 
-# 2. Do specific deal days, like Black Friday, actually influence sales greatly, as it is made out to be, in person and online?
+# 2. Do holiday online sales have an influence on the total sales for the holidays?
 
-We will take the holiday sales and online sales data to better answer this question. We already know that deal days influence the sales greatly, we will see if online sales hold a majority of that influence. We will only take into account years 2020-2022, as that is the only data we have.
+We will take the holiday sales and online sales data to better answer this question. We will see if online sales hold a majority of that influence on holiday sales. We will only take into account years 2020-2023, as that is the only data we have. For the 2023, we only have projected data, so we will use that as well.
 
 ```{r}
-onlineSales20to23$TotalSales2020 <- (sum(as.numeric(onlineSales20to23$`2020 Sales`)))
-onlineSales20to23$TotalSales2021 <- (sum(as.numeric(onlineSales20to23$`2021 Sales`)))
-onlineSales20to23$TotalSales2022 <- (sum(as.numeric(onlineSales20to23$`2022 Sales`)))
+onlineSales20to23 <- rbind(onlineSales20to23, c("Total Sales", as.numeric(sum(onlineSales20to23$`2020 Sales`)), as.numeric(sum(onlineSales20to23$`2021 Sales`)), as.numeric(sum(onlineSales20to23$`2022 Sales`)), as.numeric(sum(onlineSales20to23$`2023 Projected Sales`))))
+```
 
-onlineSales20to23$TotalSales2020[1]
-onlineSales20to23$TotalSales2021[1]
-onlineSales20to23$TotalSales2022[1]
+```{r}
+onlineSales20to23[4,]
 ```
 
 Now we will subtract the online sales from the total holiday sales.
 
 ```{r}
-holidaySales12to22$InPersonSales <- (NA)
-holidaySales12to22$InPersonSales[9] <- (holidaySales12to22$Sales[9] - onlineSales20to23$TotalSales2020[1])
-holidaySales12to22$InPersonSales[9]
+holidaySales00to23$InPersonSales <- (NA)
+holidaySales00to23$InPersonSales[21] <- (holidaySales00to23$Sales[21] - as.numeric(onlineSales20to23$`2020 Sales`[4]))
+holidaySales00to23$InPersonSales[21]
 
-holidaySales12to22$InPersonSales[10] <- (holidaySales12to22$Sales[10] - onlineSales20to23$TotalSales2020[1])
-holidaySales12to22$InPersonSales[10]
+holidaySales00to23$InPersonSales[22] <- (holidaySales00to23$Sales[22] - as.numeric(onlineSales20to23$`2021 Sales`[4]))
+holidaySales00to23$InPersonSales[22]
 
-holidaySales12to22$InPersonSales[11] <- (holidaySales12to22$Sales[11] - onlineSales20to23$TotalSales2020[1])
-holidaySales12to22$InPersonSales[11]
+holidaySales00to23$InPersonSales[23] <- (holidaySales00to23$Sales[23] - as.numeric(onlineSales20to23$`2022 Sales`[4]))
+holidaySales00to23$InPersonSales[23]
+
+holidaySales00to23$InPersonSales[24] <- (holidaySales00to23$Sales[24] - as.numeric(onlineSales20to23$`2023 Projected Sales`[4]))
+holidaySales00to23$InPersonSales[24]
 ```
 
 We will graph the differences to see how big of a difference it is between online and in-person holiday sales.
 
 ```{r}
+holidaySales20to23 <- holidaySales00to23[-c(1:20),]
+holidaySales20to23$Year <- as.numeric(holidaySales20to23$Year)
+holidaySales20to23$Sales <- as.numeric(holidaySales20to23$Sales)
+holidaySales20to23$InPersonSales <- as.numeric(holidaySales20to23$InPersonSales)
+
+ggplot(holidaySales20to23) +
+  aes(x = Year, y = Sales) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplot(holidaySales20to23) +
+  aes(x = Year, y = InPersonSales) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
 ggplot() +
-  geom_point(data = holidaySales12to22, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = holidaySales12to22, aes(x = Year, y = InPersonSales, color = "coral"))#change legends
+  geom_point(data = holidaySales20to23, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = holidaySales20to23, aes(x = Year, y = InPersonSales, color = "coral"))#change legends
 ```
 
-We can see, that it is not much a difference in sales. If people did not shop online at all, the loss would not be very significant.
+We can see, that it is not much of a difference in sales. If people did not shop online at all, the loss would not be very significant.
 
-# 3. Do top retailers skew these results, as they are popular year round?
+#3. Are people actually spending more on holiday spending as the years progress, or are they other reasons for this? Is inflation the reason for this assumed “increase”?
 
-We will take the top ten retailers of 2022 and figure out what percentage of their sales make up total retail sales for that year.
+We will begin by subtracting the inflation from the holiday sales over the years 2000 to 2022.
 
 ```{r}
-USRetailers22$RetailerSalePercentage <- (NA)
-USRetailers22$RetailerSalePercentage[1] <- ((as.numeric(USRetailers22$Sales[1]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[2] <- ((as.numeric(USRetailers22$Sales[2]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[3] <- ((as.numeric(USRetailers22$Sales[3]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[4] <- ((as.numeric(USRetailers22$Sales[4]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[5] <- ((as.numeric(USRetailers22$Sales[5]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[6] <- ((as.numeric(USRetailers22$Sales[6]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[7] <- ((as.numeric(USRetailers22$Sales[7]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[8] <- ((as.numeric(USRetailers22$Sales[8]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[9] <- ((as.numeric(USRetailers22$Sales[9]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
-USRetailers22$RetailerSalePercentage[10] <- ((as.numeric(USRetailers22$Sales[10]) / as.numeric(retailSales12to22$Sales[11])) * 100 )
+holidaySales00to23$SalesWithoutInflation <- (NA)
+holidaySales00to23$SalesWithoutInflation[1] <- (holidaySales00to23$Sales[1] - (holidaySales00to23$Sales[1] * (inflationRates60to22$`Inflation Rate`[41] / 100)))
 
-USRetailers22$RetailerSalePercentage[1:10]
+holidaySales00to23$SalesWithoutInflation[2] <- (holidaySales00to23$Sales[2] - (holidaySales00to23$Sales[2] * (inflationRates60to22$`Inflation Rate`[42] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[3] <- (holidaySales00to23$Sales[3] - (holidaySales00to23$Sales[3] * (inflationRates60to22$`Inflation Rate`[43] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[4] <- (holidaySales00to23$Sales[4] - (holidaySales00to23$Sales[4] * (inflationRates60to22$`Inflation Rate`[44] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[5] <- (holidaySales00to23$Sales[5] - (holidaySales00to23$Sales[5] * (inflationRates60to22$`Inflation Rate`[45] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[6] <- (holidaySales00to23$Sales[6] - (holidaySales00to23$Sales[6] * (inflationRates60to22$`Inflation Rate`[46] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[7] <- (holidaySales00to23$Sales[7] - (holidaySales00to23$Sales[7] * (inflationRates60to22$`Inflation Rate`[47] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[8] <- (holidaySales00to23$Sales[8] - (holidaySales00to23$Sales[8] * (inflationRates60to22$`Inflation Rate`[48] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[9] <- (holidaySales00to23$Sales[9] - (holidaySales00to23$Sales[9] * (inflationRates60to22$`Inflation Rate`[49] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[10] <- (holidaySales00to23$Sales[10] - (holidaySales00to23$Sales[10] * (inflationRates60to22$`Inflation Rate`[50] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[11] <- (holidaySales00to23$Sales[11] - (holidaySales00to23$Sales[11] * (inflationRates60to22$`Inflation Rate`[51] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[12] <- (holidaySales00to23$Sales[12] - (holidaySales00to23$Sales[12] * (inflationRates60to22$`Inflation Rate`[52] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[13] <- (holidaySales00to23$Sales[13] - (holidaySales00to23$Sales[13] * (inflationRates60to22$`Inflation Rate`[53] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[14] <- (holidaySales00to23$Sales[14] - (holidaySales00to23$Sales[14] * (inflationRates60to22$`Inflation Rate`[54] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[15] <- (holidaySales00to23$Sales[15] - (holidaySales00to23$Sales[15] * (inflationRates60to22$`Inflation Rate`[55] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[16] <- (holidaySales00to23$Sales[16] - (holidaySales00to23$Sales[16] * (inflationRates60to22$`Inflation Rate`[56] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[17] <- (holidaySales00to23$Sales[17] - (holidaySales00to23$Sales[17] * (inflationRates60to22$`Inflation Rate`[57] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[18] <- (holidaySales00to23$Sales[18] - (holidaySales00to23$Sales[18] * (inflationRates60to22$`Inflation Rate`[58] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[19] <- (holidaySales00to23$Sales[19] - (holidaySales00to23$Sales[19] * (inflationRates60to22$`Inflation Rate`[59] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[20] <- (holidaySales00to23$Sales[20] - (holidaySales00to23$Sales[20] * (inflationRates60to22$`Inflation Rate`[60] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[21] <- (holidaySales00to23$Sales[21] - (holidaySales00to23$Sales[21] * (inflationRates60to22$`Inflation Rate`[61] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[22] <- (holidaySales00to23$Sales[22] - (holidaySales00to23$Sales[22] * (inflationRates60to22$`Inflation Rate`[62] / 100)))
+
+holidaySales00to23$SalesWithoutInflation[23] <- (holidaySales00to23$Sales[23] - (holidaySales00to23$Sales[23] * (inflationRates60to22$`Inflation Rate`[63] / 100)))
 ```
 
-We will plot, on a bar graph, the retailers' sales for 2022.
+Some of the values for Sales Without Inflation are higher than their respectively sales because the inflation rate was negative, which will be discussed in our paper. Short answer is that the value of the US dollar was worth more, so the lower inflation rate accounted for that. If the inflation rate was a positive number, then that means are dollar was not worth enough to meet what is around the 0 mark.
+
+Now, we will graph the sales and sales without inflation seperately, and together, to compare values.
 
 ```{r}
-ggplot(USRetailers22[1:10,], aes(x = Retailer, y = Sales)) +
-  geom_bar(stat = "identity",)
+holidaySales00to22 <- holidaySales00to23[-c(24),]
+ggplot(holidaySales00to22) +
+  aes(x = Year, y = Sales) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplot(holidaySales00to22) +
+  aes(x = Year, y = SalesWithoutInflation) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplot() +
+  geom_point(data = holidaySales00to22, aes(x = Year, y = Sales, color = "cyan")) +
+  geom_point(data = holidaySales00to22, aes(x = Year, y = SalesWithoutInflation, color = "coral"))
 ```
 
+While we suspected that the holiday sales would be a flat line, due to inflation accounting for the price increase, they are not. The sales are still increasing with inflation accounted for.
 
-
-
-
-
-
-
-
+Interestingly, we found that years 2009 and 2015 had almost no change when inflation rate was accounted for, which makes sense as they had the two closest values to 0.
