@@ -63,19 +63,24 @@ retailSales92to22 = as.data.frame(retailSales92to22)
 ggplot(retailSales92to22) +
   aes(x = Year, y = Sales) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(y = "Sales in Billons (USD)", title = "Retail Sales from 1992 to 2022")
 
 # Holiday Sale Scatter Plot
 holidaySales00to23 = as.data.frame(holidaySales00to23)
 ggplot(holidaySales00to23) +
   aes(x = Year, y = Sales) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(y = "Sales in Billons (USD)", title = "Holiday Sales from 2000 to 2023")
 
 # Comparison
 ggplot() +
   geom_point(data = retailSales92to22, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = holidaySales00to23, aes(x = Year, y = Sales, color = "coral"))
+  geom_point(data = holidaySales00to23, aes(x = Year, y = Sales, color = "coral")) +
+  labs(y = "Sales in Billons (USD)", colour = "Sales", title = "Comparison of Retail Sales (1992-2022) and Holiday Sales (2000-2023) Data") +
+  scale_color_manual(values = c("cyan", "coral"),
+                     labels = c("Holiday Sales", "Retail Sales"))
 ```
 
 In order to get an effective result, we will cut both data frames so that the data is focusing only on the years 2010-2020. Anything before 2010 is a little too old. In regards to the years 2021 and 2022, reasons for exclusion are discussed in our paper.
@@ -92,18 +97,23 @@ Now, we will repeat the same process for the new data frames.
 ggplot(retailSales10to20) +
   aes(x = Year, y = Sales) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(y = "Sales in Billons (USD)", title = "Retail Sales from 2010 to 2020")
 
 # Holiday Sale Scatter Plot
 ggplot(holidaySales10to20) +
   aes(x = Year, y = Sales) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm")+
+  labs(y = "Sales in Billons (USD)", title = "Holiday Sales from 2010 to 2020")
 
 # Comparison
 ggplot() +
   geom_point(data = retailSales10to20, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = holidaySales10to20, aes(x = Year, y = Sales, color = "coral"))
+  geom_point(data = holidaySales10to20, aes(x = Year, y = Sales, color = "coral")) +
+  labs(y = "Sales in Billons (USD)", colour = "Sales", title = "Comparison of Retail and Holiday Sales (2010-2020) Data") +
+  scale_color_manual(values = c("cyan", "coral"),
+                     labels = c("Holiday Sales", "Retail Sales"))
 ```
 
 ```{r}
@@ -121,7 +131,10 @@ retailSales10to20$SalesWithoutHoliday <- (retailSales10to20$Sales - holidaySales
 
 ggplot() +
   geom_point(data = retailSales10to20, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = retailSales10to20, aes(x = Year, y = SalesWithoutHoliday, color = "coral"))
+  geom_point(data = retailSales10to20, aes(x = Year, y = SalesWithoutHoliday, color = "coral")) +
+  labs(y = "Sales in Billons (USD)", colour = "Sales", title = "Comparison of Retail Sales Data With and Without Holiday Sales (2010-2020)") +
+  scale_color_manual(values = c("cyan", "coral"),
+                     labels = c("Retail Sales without Holiday Sales", "Retail Sales with Holiday Sales"))
 ```
 
 As we can see from the data, the retail sales are affected pretty heavily from holiday sales.
@@ -166,16 +179,21 @@ holidaySales20to23$InPersonSales <- as.numeric(holidaySales20to23$InPersonSales)
 ggplot(holidaySales20to23) +
   aes(x = Year, y = Sales) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(y = "Sales in Billons (USD)", title = "Holiday Sales from 2020 to 2023")
 
 ggplot(holidaySales20to23) +
   aes(x = Year, y = InPersonSales) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(y = "Sales in Billons (USD)", title = "In Person Holiday Sales from 2020 to 2023")
 
 ggplot() +
   geom_point(data = holidaySales20to23, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = holidaySales20to23, aes(x = Year, y = InPersonSales, color = "coral"))#change legends
+  geom_point(data = holidaySales20to23, aes(x = Year, y = InPersonSales, color = "coral")) +
+  labs(y = "Sales in Billons (USD)", colour = "Sales", title = "Comparison of Holiday Sales (2020-2023) With and Without Online Sales") +
+  scale_color_manual(values = c("cyan", "coral"),
+                     labels = c("Holiday Sales In Person Only", "Holiday Sales In Person and Online"))
 ```
 
 We can see, that it is not much of a difference in sales. If people did not shop online at all, the loss would not be very significant.
@@ -242,16 +260,21 @@ holidaySales00to22 <- holidaySales00to23[-c(24),]
 ggplot(holidaySales00to22) +
   aes(x = Year, y = Sales) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(y = "Sales in Billons (USD)", title = "Holiday Sales from 2000 to 2022")
 
 ggplot(holidaySales00to22) +
   aes(x = Year, y = SalesWithoutInflation) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm") +
+  labs(y = "Sales in Billons (USD)", title = "Holiday Sales from 2000 to 2022 without Inflation")
 
 ggplot() +
   geom_point(data = holidaySales00to22, aes(x = Year, y = Sales, color = "cyan")) +
-  geom_point(data = holidaySales00to22, aes(x = Year, y = SalesWithoutInflation, color = "coral"))
+  geom_point(data = holidaySales00to22, aes(x = Year, y = SalesWithoutInflation, color = "coral")) +
+  labs(y = "Sales in Billons (USD)", colour = "Sales", title = "Comparison of Holiday Sales (2000-2022) With and Without Inflation Accounted For") +
+  scale_color_manual(values = c("cyan", "coral"),
+                     labels = c("Holiday Sales without Inflation", "Holiday Sales with Inflation"))
 ```
 
 While we suspected that the holiday sales would be a flat line, due to inflation accounting for the price increase, they are not. The sales are still increasing with inflation accounted for.
