@@ -196,6 +196,15 @@ ggplot() +
                      labels = c("Holiday Sales In Person Only", "Holiday Sales In Person and Online"))
 ```
 
+```{r}
+lmHolidaySales20to23 <- lm(Sales ~ Year, data = holidaySales20to23)
+summary(lmHolidaySales20to23)
+
+lmInPersonHolidaySales10to20 <- lm(InPersonSales ~ Year, data = holidaySales20to23)
+summary(lmInPersonHolidaySales10to20)
+```
+
+
 We can see, that it is not much of a difference in sales. If people did not shop online at all, the loss would not be very significant.
 
 #3. Are people actually spending more on holiday spending as the years progress, or are they other reasons for this? Is inflation the reason for this assumed “increase”?
@@ -276,6 +285,15 @@ ggplot() +
   scale_color_manual(values = c("cyan", "coral"),
                      labels = c("Holiday Sales without Inflation", "Holiday Sales with Inflation"))
 ```
+
+```{r}
+lmHolidaySales00to22 <- lm(Sales ~ Year, data = holidaySales00to22)
+summary(lmHolidaySales00to22)
+
+lmInflationHolidaySales00to22 <- lm(SalesWithoutInflation ~ Year, data = holidaySales00to22)
+summary(lmInflationHolidaySales00to22)
+```
+
 
 While we suspected that the holiday sales would be a flat line, due to inflation accounting for the price increase, they are not. The sales are still increasing with inflation accounted for.
 
